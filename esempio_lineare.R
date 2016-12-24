@@ -54,10 +54,114 @@ for(k in 2:K){
   #create Sigma_k
     Sigma = diag(k) + t(phi)%*%phi
     assign(paste("Sigma",k,sep="_"), Sigma)
-  #create mu_k, useful for the predictive
-    mu = solve(Sigma)%*%t(phi)%*%y_obs
-    assign(paste("mu",k,sep="_"),mu)
-    MU[k]=mu
+}
+
+#setting the normalizing constant for the posterior
+
+posterior_denominator=0;
+
+for(k in 1:K){
+  posterior_denominator = posterior_denominator + integrated_likelihood(N,get(paste("Sigma",k,sep="_")),get(paste("PHI",k,sep="_")),y_obs)
+}
+
+posterior_models=numeric(K);
+
+for(k in 1:K){
+  posterior_models[k] = integrated_likelihood(N,get(paste("Sigma",k,sep="_")),get(paste("PHI",k,sep="_")),y_obs)/posterior_denominator
+}
+
+
+# Bayesian Model Averaged Mean Predictior
+# make predictions, evaluate mu_star
+
+mu_star=0
+L = length(t_true)
+y_pred = numeric(L)
+
+for(i in 1:L){
+  t_star=t_true[i]
+  for(k in 1:K){
+    phi = numeric(k)
+    for(j in 1:k){
+      phi[j] = t_star^j
+    }
+    mu = solve(get(paste("Sigma",k,sep="_")))%*%t(get(paste("PHI",k,sep="_")))%*%y_obs
+    y_pred[i] = y_pred[i] + t(phi)%*%mu%*%posterior_models[k]
+  }
+}
+
+windows()
+plot(t_obs,y_obs)
+lines(t_true,y_true,col="red")
+lines(t_true,y_pred,col="dark green")
+windows()
+barplot(posterior_models)
+
+
+##################################
+## Caso lineare, base di Fourier #
+##################################
+
+set.seed(21122016)
+N=100
+t_obs=runif(N,-1,1)
+t_obs=sort(t_obs)
+y_obs=0.219*t_obs^3 + 0.5287*t_obs^2-0.805*t_obs + rnorm(N,0,0.2)
+
+t_true=seq(-1-0.02,1+0.02,by=0.1)
+y_true=0.219*t_true^3 + 0.5287*t_true^2-0.805*t_true
+windows()
+plot(t_obs,y_obs,pch=16)
+lines(t_true,y_true,col="red")
+
+K=20;
+
+fourier_basis <-function(index,seno){
+  #params: -index: integer cointaining the index of the fourier basis to be evaluated
+  #        -seno: boolean = 1 if we want to evaluate sin, 0 for cos
+  function(x) {
+    sqrt(2)*sin(2*pi*index*x)*seno + sqrt(2)*cos(2*pi*index*x)*(1-seno)
+  }
+ 
+}
+
+prior_models=rep(1/K,K)
+
+integrated_likelihood <- function(N,Sigma,PHI,y_obs)
+{
+  out = gamma(1+N/2)/sqrt(pi^N*det(Sigma)) * (1 + 0.5* t(y_obs)%*%(diag(N)-PHI%*%solve(Sigma)%*%t(PHI))%*%y_obs)^(-1-N/2)
+  return(out)
+}
+
+
+phi = matrix(nrow=N,ncol=K)
+phi[,1] = fourier_basis(0,0)(t_obs);
+phi[,2] = fourier_basis(1,0)(t_obs);
+phi[,3] = fourier_basis(1,1)(t_obs);
+phi[,4] = fourier_basis(2,0)(t_obs);
+phi[,5] = fourier_basis(2,1)(t_obs);
+phi[,6] = fourier_basis(3,0)(t_obs);
+phi[,7] = fourier_basis(3,1)(t_obs);
+phi[,8] = fourier_basis(4,0)(t_obs);
+phi[,9] = fourier_basis(4,1)(t_obs);
+phi[,10] = fourier_basis(5,0)(t_obs);
+phi[,11] = fourier_basis(5,1)(t_obs);
+phi[,12] = fourier_basis(6,0)(t_obs);
+phi[,13] = fourier_basis(6,1)(t_obs);
+phi[,14] = fourier_basis(7,0)(t_obs);
+phi[,15] = fourier_basis(7,1)(t_obs);
+phi[,16] = fourier_basis(8,0)(t_obs);
+phi[,17] = fourier_basis(8,1)(t_obs);
+phi[,18] = fourier_basis(9,0)(t_obs);
+phi[,19] = fourier_basis(9,1)(t_obs);
+phi[,20] = fourier_basis(10,0)(t_obs);
+
+for(k in 1:K){
+  #create PHI_k
+  assign(paste("PHI",k,sep="_"),phi[,1:k])
+  #create Sigma_k
+  Sigma = diag(k) + t(phi[,1:k])%*%phi[,1:k]
+  assign(paste("Sigma",k,sep="_"), Sigma)
 }
 
 #setting the normalizing constant for the posterior
@@ -77,20 +181,6 @@ for(k in 1:K){
 
 # Bayesian Model Averaged Mean Predictior
 
-mu_ <- function(t_star,k,mu_k){
-  out = 0;
-  phi = numeric(k)
-  for(j in 1:k){
-    phi[j] = t_star^j
-  }
- # for(j in 1:k){
-    out = out + t(phi)%*%mu_k*posterior_models[j]
-  #}
-  return(out)
-}
-
-#make predictions, evaluate mu_star
-
 mu_star=0
 L = length(t_true)
 y_pred = numeric(L)
@@ -99,16 +189,23 @@ for(i in 1:L){
   t_star=t_true[i]
   for(k in 1:K){
     phi = numeric(k)
-    for(j in 1:k){
-      phi[j] = t_star^j
+    for(j in 0:k-1){
+      phi[j+1] = fourier_basis(floor(j/2),j%%2)(t_star)
     }
     mu = solve(get(paste("Sigma",k,sep="_")))%*%t(get(paste("PHI",k,sep="_")))%*%y_obs
     y_pred[i] = y_pred[i] + t(phi)%*%mu%*%posterior_models[k]
   }
 }
 
-windows()
-plot(t_true,y_pred)
+#windows()
+plot(t_obs,y_obs)
+lines(t_true,y_true,col="red")
+lines(t_true,y_pred,col="dark green")
 windows()
 barplot(posterior_models)
 
+
+plot(t_obs,PHI_10[,1])
+for(i in 2:10){
+  lines(t_obs,PHI_10[,i])
+}
