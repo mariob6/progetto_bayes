@@ -109,4 +109,6 @@ for(i in 1:L){
 
 windows()
 plot(t_true,y_pred)
+windows()
+barplot(posterior_models)
 
