@@ -228,7 +228,7 @@ metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
     # numerator
     lacp <- posterior(th = delta, y_obs = y_obs, y0 = y0)
     # denominator
-    lacp <- lacp - posterior(th = delta, y_obs = y_obs, y0 = y0)
+    lacp <- lacp - posterior(th = th0, y_obs = y_obs, y0 = y0)
 
     if(is.nan(lacp))
       lacp = 0
