@@ -1,3 +1,8 @@
+#######################################################
+# Linear Example (Section 4 of the paper by Girolami) #
+
+
+
 library("MCMCpack")
 library("MASS")
 set.seed(21122016)
