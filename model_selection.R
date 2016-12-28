@@ -1,3 +1,7 @@
+###################
+# Model Selection #
+###################
+
 set.seed(21122016)
 N=25
 t_obs=runif(25,-2,2)
@@ -74,7 +78,7 @@ if(K>1){
   }
   
   windows()
-  plot(t_obs,y_obs)
+  plot(t_obs,y_obs,main = paste(K))
   lines(t_true,y_true,col="red")
   lines(t_true,y_pred,col="dark green")
  # windows()
