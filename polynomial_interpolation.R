@@ -1,3 +1,7 @@
+
+# Compare the results of model_selection with classical polynomial interpolation
+
+
 set.seed(21122016)
 N=25
 t_obs=runif(25,-2,2)
