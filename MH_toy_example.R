@@ -70,7 +70,7 @@ posterior <- function (th,y_obs,y0){
     out <- out + dmvnorm(y_obs[i,],mean = y_mod[i,], sigma = diag(0.5,2),log=T)
   }
   #Multiply times the prior
-  out = out + log(dunif(th[1],0.1,5)) + log(dgamma(th[2],0.1,5))
+  out = out + log(dgamma(th[1],1,1)) + log(dgamma(th[2],1,1))
   return(out)
 }
 
@@ -89,12 +89,6 @@ for(k in 1:50){
     cat("k=",k, "\n")
 }
 
-max(post_grid)
-min(post_grid)
-
-post_grid = post_grid - max(post_grid)
-
-post_grid = exp(post_grid)
 
 x11()
 # Contour fun: Create a contour plot, or add contour lines to an existing plot
@@ -104,6 +98,30 @@ contour(grid.k3, grid.k4, post_grid, lwd = 3, labcex = 1.1, col = "blue", main =
 x11()
 persp(grid.k3, grid.k4, post_grid, theta = 30)
 
+
+
+#### Different Grid
+
+grid.k3 = seq(1.5,2.5,length=50)
+grid.k4 = seq(0.5,1.5,length=50)
+
+post_grid = matrix(nrow=50,ncol=50)
+
+for(k in 1:50){
+  for(j in 1:50){
+    post_grid[k,j] = posterior(c(grid.k3[k],grid.k4[j]),y_obs,y0)
+  }
+  if(k%%10 == 0)
+    cat("k=",k, "\n")
+}
+
+x11()
+# Contour fun: Create a contour plot, or add contour lines to an existing plot
+contour(grid.k3, grid.k4, post_grid, lwd = 3, labcex = 1.1, col = "blue", main = "Posterior density", 
+        xlab = "k3", ylab = "k4")
+
+x11()
+persp(grid.k3, grid.k4, post_grid, theta = 30)
 
 
 ######
@@ -133,7 +151,7 @@ windows()
 plot(t_obs,y_obs)
 lines(t_obs,y_true,col="red")
 
-## We assume k1,k2,k5 known and assign a Gamma prior with parameters 1,1 to k3,k4
+## We assume k1,k2,k5,sigma(=0.5) known and assign a Gamma prior with parameters 1,1 to k3,k4
 
 posterior <- function (th,y_obs,y0){
   n = length(y_obs)
@@ -170,13 +188,6 @@ for(k in 1:50){
     cat("k=",k, "\n")
 }
 
-max(post_grid)
-min(post_grid)
-
-post_grid = post_grid - max(post_grid)
-
-post_grid = exp(post_grid)
-
 
 x11()
 # Contour fun: Create a contour plot, or add contour lines to an existing plot
@@ -191,23 +202,19 @@ persp(grid.k3, grid.k4, post_grid, theta = 30)
 ## Metropolis Hastings  ##
 ##########################
 
-# Define the proposal as gaussian with suitable mean and variance
+# Define the proposal as gaussian with suitable variance
 
-?optim
 ottimo <- optim(par = c(mean(y_obs), log(sd(y_obs))), 
                 fn = posterior, y_obs = y_obs,
                 y0 = y0, 
                 hessian = T, control = list(fnscale=-1))
 
-map <- ottimo$par 
-map
-# ...but also an "estimate" of the input Hessian matrix around the maximum
-# Through this estimate I define the matrix of variance and covariance of the proposal
+
 Sig <- - solve(ottimo$hessian)  
-# Estimation of the covariance
+
 Sig
 
-gamma = 1000
+gamma = 1
 
 Sig = gamma * Sig
 
@@ -228,7 +235,7 @@ metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
     # numerator
     lacp <- posterior(th = delta, y_obs = y_obs, y0 = y0)
     # denominator
-    lacp <- lacp - posterior(th = th0, y_obs = y_obs, y0 = y0)
+    lacp <- lacp - posterior(th = delta, y_obs = y_obs, y0 = y0)
 
     if(is.nan(lacp))
       lacp = 0
@@ -242,8 +249,7 @@ metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
       th0 <- delta
       nacp = nacp + 1
     }
-  
-    
+
     if(i>burnin & (i-burnin)%%thin==0)
     {
       th[(i-burnin)/thin,] = th0
