@@ -5,6 +5,7 @@ library(mvtnorm)
 library(deSolve)
 library(coda)
 
+set.seed(09012017)
 # Model: dx/dt = k1/(36 + k2* y) - k3
 #        dy/dt = k4*x - k5
 
@@ -177,15 +178,15 @@ posterior <- function (th,y_obs,y0){
   }
 
   #Multiply times the prior
-  out = out + log(dgamma(th[1],1,1)) + log(dgamma(th[2],1,1))
+  out = out + dmvnorm(th, mean = c(2,1), sigma = diag(0.1,2), log = T)
   return(out)
 }
 
 #Plot the posterior on a grid
 
 
-grid.k3 = seq(0.01,4,length=50)
-grid.k4 = seq(0.01,4,length=50)
+grid.k3 = seq(1,4,length=50)
+grid.k4 = seq(1,4,length=50)
 
 post_grid = matrix(nrow=50,ncol=50)
 
@@ -269,15 +270,15 @@ metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
   return(th)
 }
 
-niter = 6000
-burnin = 0
-thin = 1
+niter = 16000
+burnin = 10000
+thin = 10
 # At the end the chain will contain
 # (niter-burnin)/thin = 5000 observations
 
-#th0 = map
+
 th0 = c(1.5,1)
-th.post <- metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0, Sig = Sig, y0 = y0)
+th.post <- metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0, Sig = Sig, y0 = starting_point)
 
 dim(th.post)
 
@@ -287,7 +288,7 @@ plot(th.post.mc)
 
 geweke.plot(th.post.mc, frac1 = 0.1, frac2 = 0.5, nbins = 20 )
 
-
+#th.post = th
 plot(th.post)
 
 grid.k3 = seq(min(th.post[,1]),max(th.post[,1]),length=50)
@@ -306,36 +307,59 @@ for(k in 1:50){
 
 contour(grid.k3, grid.k4, post_grid, lwd = 1, labcex = 1.1, col = "blue", main = "Posterior density", 
         xlab = "k3", ylab = "k4")
-
 points(th.post)
 
 
+###### Start 10 MC from different initial points #####
+th0_vec = rmvnorm(10,mean=c(0,0),sigma=diag(c(20,20)))
 
-
-
-
-# starting 10 MC from various initial points #
 
 library(foreach)
 library(doParallel)
+
+#setup parallel backend to use many processors
 cores=detectCores()
 cl <- makeCluster(cores[1]-1) #not to overload your computer
 registerDoParallel(cl)
 
-niter = 6000
-burnin = 0
-thin = 1
-
-th0 = mvrnorm(10, mean = c(0,0) sigma = diag(20,20))
-
-finalMatrix <- foreach(i=1:10, .combine=cbind) %dopar% {
-  tempMatrix = metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0[i,], Sig = Sig, y0 = starting_point)
-  #do other things if you want
-  
+finalMatrix <- foreach(i=1:10, .packages = c("mvtnorm","deSolve"), .combine=cbind) %dopar% {
+  tempMatrix =  metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0_vec[i,], Sig = Sig, y0 = starting_point)
   tempMatrix #Equivalent to finalMatrix = cbind(finalMatrix, tempMatrix)
 }
 
+stopCluster(cl)
 
+colmax = apply(finalMatrix,max,2)
+colmin = apply(finalMatrix,min,2)
+
+range_k3 = c(min(colmin[1],colmin[3],colmin[5],colmin[7],colmin[9],colmin[11],colmin[13],colmin[15],colmin[17],colmin[19]),
+             max(colmax[1],colmax[3],colmax[5],colmax[7],colmax[9],colmax[11],colmax[13],colmax[15],colmax[17],colmax[19]))
+
+
+range_k4 = c(min(colmin[2],colmin[4],colmin[6],colmin[8],colmin[10],colmin[12],colmin[14],colmin[16],colmin[18],colmin[20]),
+             max(colmax[2],colmax[4],colmax[6],colmax[8],colmax[10],colmax[12],colmax[15],colmax[16],colmax[18],colmax[20]))
+
+
+grid.k3 = seq(range_k3[1],range_k3[2],length=50)
+grid.k4 = seq(range_k4[1],range_k4[2],length=50)
+
+post_grid = matrix(nrow=50,ncol=50)
+
+for(k in 1:50){
+  for(j in 1:50){
+    post_grid[k,j] = posterior(c(grid.k3[k],grid.k4[j]),y_obs,starting_point)
+  }
+  if(k%%10 == 0)
+    cat("k=",k, "\n")
+}
+
+
+contour(grid.k3, grid.k4, post_grid, lwd = 1, labcex = 1.1, col = "blue", main = "Posterior density", 
+        xlab = "k3", ylab = "k4")
+
+for(i in 1:19){
+  points(finalMatrix[i:i+1,])
+}
 
 
 
