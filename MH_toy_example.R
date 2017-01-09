@@ -269,15 +269,15 @@ metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
   return(th)
 }
 
-niter = 60000
-burnin = 10000
-thin = 10
+niter = 6000
+burnin = 0
+thin = 1
 # At the end the chain will contain
 # (niter-burnin)/thin = 5000 observations
 
 #th0 = map
 th0 = c(1.5,1)
-th.post <- metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0, Sig = Sig, y0 = starting_point)
+th.post <- metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0, Sig = Sig, y0 = y0)
 
 dim(th.post)
 
@@ -308,6 +308,35 @@ contour(grid.k3, grid.k4, post_grid, lwd = 1, labcex = 1.1, col = "blue", main =
         xlab = "k3", ylab = "k4")
 
 points(th.post)
+
+
+
+
+
+
+# starting 10 MC from various initial points #
+
+library(foreach)
+library(doParallel)
+cores=detectCores()
+cl <- makeCluster(cores[1]-1) #not to overload your computer
+registerDoParallel(cl)
+
+niter = 6000
+burnin = 0
+thin = 1
+
+th0 = mvrnorm(10, mean = c(0,0) sigma = diag(20,20))
+
+finalMatrix <- foreach(i=1:10, .combine=cbind) %dopar% {
+  tempMatrix = metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0[i,], Sig = Sig, y0 = starting_point)
+  #do other things if you want
+  
+  tempMatrix #Equivalent to finalMatrix = cbind(finalMatrix, tempMatrix)
+}
+
+
+
 
 
 ###################
