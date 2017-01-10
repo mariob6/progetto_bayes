@@ -333,10 +333,13 @@ finalMatrix <- foreach(i=1:10, .packages = c("mvtnorm","deSolve"), .combine=cbin
 #  tempMatrix =  metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0_vec[i,], Sig = Sig, y0 = starting_point)
 #  finalMatrix = cbind(finalMatrix,tempMatrix)
 #}                                        
-write.csv(finalMatrix, file="output_10_chains_par.csv")
-
 stopCluster(cl)
 write.csv(finalMatrix, file="output_10_chains_par.csv")
+
+
+
+finalMatrix=read.csv(file="output_10_chains_par.csv")
+finalMatrix=finalMatrix[,2:20]
 
 colmax = apply(finalMatrix,2,max)
 colmin = apply(finalMatrix,2,min)
@@ -349,8 +352,8 @@ range_k4 = c(min(colmin[2],colmin[4],colmin[6],colmin[8],colmin[10],colmin[12],c
              max(colmax[2],colmax[4],colmax[6],colmax[8],colmax[10],colmax[12],colmax[15],colmax[16],colmax[18],colmax[20]))
 
 
-grid.k3 = seq(1,range_k3[2],length=50)
-grid.k4 = seq(1,range_k4[2],length=50)
+grid.k3 = seq(-2,2,length=50)
+grid.k4 = seq(-2,2,length=50)
 
 post_grid = matrix(nrow=50,ncol=50)
 
@@ -367,9 +370,13 @@ graphics.off()
 contour(grid.k3, grid.k4, post_grid, lwd = 1, labcex = 1.1, col = "blue", main = "Posterior density", 
         xlab = "k3", ylab = "k4")
 
-for(i in seq(1,19,by=2){
-  points(finalMatrix[i:i+1,])
+for(i in seq(1,19,by=2)){
+  points(finalMatrix[,i],finalMatrix[,i+1])
 }
+
+
+
+
 
 
 
