@@ -332,7 +332,7 @@ finalMatrix <- foreach(i=1:10, .packages = c("mvtnorm","deSolve"), .combine=cbin
 #for(i in 1:10){
 #  tempMatrix =  metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0_vec[i,], Sig = Sig, y0 = starting_point)
 #  finalMatrix = cbind(finalMatrix,tempMatrix)
-#}
+#}                                        
 write.csv(finalMatrix, file="output_10_chains_par.csv")
 
 stopCluster(cl)
