@@ -167,7 +167,7 @@ posterior <- function (th,y_obs,y0){
   n = length(y_obs)
   times = seq(0,60, by=0.5)
   
-  y_mod = ode(y0,times,circ_oscillator,c(72,1,th[1],th[2],1),method = "ode45")[,3]
+  y_mod = ode(y0,times,circ_oscillator,c(72,1,th[1],th[2],1),method = "ode23")[,3]
   
   out = 0
   
@@ -224,9 +224,11 @@ Sig <- - solve(ottimo$hessian)
 
 Sig
 
-gamma = 1000
+gamma = 10
 
 Sig = gamma * Sig
+
+Sig = diag(c(0.5,0.5))
 
 metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
 {
@@ -247,8 +249,6 @@ metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
     # denominator
     lacp <- lacp - posterior(th = th0, y_obs = y_obs, y0 = y0)
 
-    if(is.nan(lacp))
-      lacp = 0
     lacp <- min(0, lacp)  
     # Note: The proposal is symmetrical and therefore does not appear in the value of acceptance / rejection!
     
@@ -311,8 +311,9 @@ points(th.post)
 
 
 ###### Start 10 MC from different initial points #####
-th0_vec = rmvnorm(10,mean=c(0,0),sigma=diag(c(20,20)))
-
+th0_vec = matrix(nrow = 10, ncol = 2)
+th0_vec[,1] = runif(10,0.5,5)
+th0_vec[,2] = runif(10,0.5,5)
 
 library(foreach)
 library(doParallel)
@@ -327,10 +328,18 @@ finalMatrix <- foreach(i=1:10, .packages = c("mvtnorm","deSolve"), .combine=cbin
   tempMatrix #Equivalent to finalMatrix = cbind(finalMatrix, tempMatrix)
 }
 
-stopCluster(cl)
+#finalMatrix<-NULL
+#for(i in 1:10){
+#  tempMatrix =  metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0_vec[i,], Sig = Sig, y0 = starting_point)
+#  finalMatrix = cbind(finalMatrix,tempMatrix)
+#}                                        
+write.csv(finalMatrix, file="output_10_chains_par.csv")
 
-colmax = apply(finalMatrix,max,2)
-colmin = apply(finalMatrix,min,2)
+stopCluster(cl)
+write.csv(finalMatrix, file="output_10_chains_par.csv")
+
+colmax = apply(finalMatrix,2,max)
+colmin = apply(finalMatrix,2,min)
 
 range_k3 = c(min(colmin[1],colmin[3],colmin[5],colmin[7],colmin[9],colmin[11],colmin[13],colmin[15],colmin[17],colmin[19]),
              max(colmax[1],colmax[3],colmax[5],colmax[7],colmax[9],colmax[11],colmax[13],colmax[15],colmax[17],colmax[19]))
@@ -340,8 +349,8 @@ range_k4 = c(min(colmin[2],colmin[4],colmin[6],colmin[8],colmin[10],colmin[12],c
              max(colmax[2],colmax[4],colmax[6],colmax[8],colmax[10],colmax[12],colmax[15],colmax[16],colmax[18],colmax[20]))
 
 
-grid.k3 = seq(range_k3[1],range_k3[2],length=50)
-grid.k4 = seq(range_k4[1],range_k4[2],length=50)
+grid.k3 = seq(1,range_k3[2],length=50)
+grid.k4 = seq(1,range_k4[2],length=50)
 
 post_grid = matrix(nrow=50,ncol=50)
 
@@ -353,11 +362,12 @@ for(k in 1:50){
     cat("k=",k, "\n")
 }
 
+graphics.off()
 
 contour(grid.k3, grid.k4, post_grid, lwd = 1, labcex = 1.1, col = "blue", main = "Posterior density", 
         xlab = "k3", ylab = "k4")
 
-for(i in 1:19){
+for(i in seq(1,19,by=2){
   points(finalMatrix[i:i+1,])
 }
 
