@@ -38,6 +38,7 @@ t_obs=seq(0,t_end, by=0.5)
 #Set the "true" solutions evaluated in t_obs using ODE45
 
 starting_point = c(7,-10)
+y0=starting_point
 y_true = ode(starting_point,t_obs,circ_oscillator,c(k1,k2,k3,k4,k5),method = "ode45")[,3]
 
 
