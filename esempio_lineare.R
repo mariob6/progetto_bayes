@@ -1,7 +1,7 @@
 #######################################################
 # Linear Example (Section 4 of the paper by Girolami) #
 
-
+setwd("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana")
 
 library("MCMCpack")
 library("MASS")

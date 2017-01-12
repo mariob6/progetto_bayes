@@ -1,6 +1,9 @@
 #############################################
 ## Metropolis Hastings on the simple model ##
 #############################################
+
+setwd("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana")
+
 library(mvtnorm)
 library(deSolve)
 library(coda)
@@ -228,13 +231,13 @@ gamma = 10
 
 Sig = gamma * Sig
 
-Sig = diag(c(0.5,0.5))
+#Sig = diag(c(0.5,0.5))
 
 metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
 {
   
   # define the vector that contains the output MCMC sample
-  th <- matrix(nrow= ceiling((niter-burnin)/thin), ncol = 2)
+  th <- matrix(nrow= ceiling(burnin/500 + (niter-burnin)/thin), ncol = 2)
   
   nacp = 0 # number of accepted moves
   # Start from th0
@@ -259,10 +262,14 @@ metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
       th0 <- delta
       nacp = nacp + 1
     }
+    
+    if(i<burnin & (i-burnin)%%500==0){
+      th[i/500,] = th0
+    }
 
     if(i>burnin & (i-burnin)%%thin==0)
     {
-      th[(i-burnin)/thin,] = th0
+      th[burnin/500 + (i-burnin)/thin,] = th0
     }
     if(i%%1000==0) cat("*** Iteration number ", i,"/", niter ,"\n")
   }
@@ -271,10 +278,9 @@ metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
 }
 
 niter = 16000
-burnin = 10000
-thin = 10
-# At the end the chain will contain
-# (niter-burnin)/thin = 5000 observations
+burnin = 0
+thin = 1
+
 
 
 th0 = c(1.5,1)
@@ -339,7 +345,7 @@ write.csv(finalMatrix, file="output_10_chains_par.csv")
 
 
 finalMatrix=read.csv(file="output_10_chains_par.csv")
-finalMatrix=finalMatrix[,2:20]
+finalMatrix=finalMatrix[,2:21]
 
 colmax = apply(finalMatrix,2,max)
 colmin = apply(finalMatrix,2,min)
@@ -348,12 +354,10 @@ range_k3 = c(min(colmin[1],colmin[3],colmin[5],colmin[7],colmin[9],colmin[11],co
              max(colmax[1],colmax[3],colmax[5],colmax[7],colmax[9],colmax[11],colmax[13],colmax[15],colmax[17],colmax[19]))
 
 
-range_k4 = c(min(colmin[2],colmin[4],colmin[6],colmin[8],colmin[10],colmin[12],colmin[14],colmin[16],colmin[18],colmin[20]),
-             max(colmax[2],colmax[4],colmax[6],colmax[8],colmax[10],colmax[12],colmax[15],colmax[16],colmax[18],colmax[20]))
+range_k4 = range_k3;
 
-
-grid.k3 = seq(-2,2,length=50)
-grid.k4 = seq(-2,2,length=50)
+grid.k3 = seq(range_k3[1],range_k3[2],length=50)
+grid.k4 = seq(range_k4[1],range_k4[2],length=50)
 
 post_grid = matrix(nrow=50,ncol=50)
 
