@@ -63,7 +63,7 @@ target <- function(th,y_obs,y0,alfa,likelihood,prior){
     return(likelihood(th,y_obs,y0)^alfa * prior(th) )
 }
 
-log_target <- function(th,y_obs,y0,alfa,log_likelihood,log_prior){
+log_target <- function(th,y_obs,y0,alfa){
   out = alfa*log_likelihood(th,y_obs,y0) + log_prior(th)
   return(out)
 }
@@ -120,11 +120,13 @@ persp(grid_k3, grid_k4, plot_grid, theta = 30)
 
 ############
 
-target_density_sampler <- function(niter, burnin, th0, Sig,y0,alfa,log_target,log_likelihood, log_prior)
+target_density_sampler <- function(niter, burnin, th0, Sig,y0,alfa,log_target)
 {
   # define the vector that contains the output MCMC sample
   th <- NULL
   L = length(alfa)
+  
+  th0=c(th0,alfa)
   
   nacp = 0 # number of accepted moves
   # Start from th0
@@ -133,13 +135,13 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,alfa,log_target,lo
     ## propose delta: the mean is given by the previous value 
     ## N.B: delta = c(th,alfa_i), we initially use a discrete uniform for alfa_i
     
-    delta <- c(as.vector(rmvnorm(1, mean = th0, sig = Sig)),sample(alfa,1))
+    delta <- c(as.vector(rmvnorm(1, mean = th0[1:2], sig = Sig)),sample(alfa,1))
     
     # First consider the accept/reject ratio
     # numerator
-    lacp <- log_target(th = delta[1:2], y_obs = y_obs, y0 = y0, alfa = delta[3], log_likelihood, log_prior)
+    lacp <- log_target(th = delta[1:2], y_obs = y_obs, y0 = y0, alfa = delta[3])
     # denominator
-    lacp <- lacp - log_target(th = th0[1:2], y_obs = y_obs, y0 = y0, alfa = th0[3], log_likelihood, log_prior)
+    lacp <- lacp - log_target(th = th0[1:2], y_obs = y_obs, y0 = y0, alfa = th0[3])
 
     #lacp <- min(0, lacp)  
     # Note: The proposal is symmetrical and therefore does not appear in the value of acceptance / rejection!
@@ -164,12 +166,12 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,alfa,log_target,lo
 }
 
 Sig = matrix(data = c(1.788331e-05, -0.0000462595, -4.625950e-05, 0.0001702542),nrow=2,ncol=2)
-niter=16000
+niter=60000
 burnin=10000
 
 th0 = c(1.5,1)
-alfa = 0.5
-th.post <- target_density_sampler(niter = niter, burnin = burnin, th0 = th0, Sig = Sig,y0 = y0,alfa = alfa,log_likelihood, log_prior)
+alfa = seq(0,1,by=0.2)
+th.post <- target_density_sampler(niter = niter, burnin = burnin, th0 = th0, Sig = Sig,y0 = y0,alfa = alfa,log_target)
 dim(th.post)
 
 th.post.mc <- mcmc(th.post, start = 0, end = niter, thin = 1)
