@@ -18,7 +18,8 @@ prior <- function(th){
 }
 
 log_prior <- function(th){
-  out = log(dgamma(th[1],16,8)) + log(dgamma(th[2],8,8))
+  out = dmvnorm(th, mean = c(2,1), sigma = diag(0.1,nrow=2), log=T)
+  #out = log(dgamma(th[1],16,8)) + log(dgamma(th[2],8,8))
   return(out)
 }
 
@@ -70,15 +71,15 @@ log_target <- function(th,y_obs,y0,alfa){
 ###########
 # Plot the log_target for different choices of alfa
 
-grid_k3 = seq(1.3,6,by=0.1)
-grid_k4 = seq(0.3,5,by=0.1)
+grid_k3 = seq(0,5,by=0.1)
+grid_k4 = seq(0,5,by=0.1)
 
 alfa = 0;
 
 plot_grid = matrix(nrow=length(grid_k3), ncol=length(grid_k4))
 for(i in (1:length(grid_k3))){
   for(j in (1:length(grid_k4)))
-    plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, alfa=alfa,log_likelihood = log_likelihood,log_prior = log_prior)
+    plot_grid[i,j] = log_prior(th=c(grid_k3[i],grid_k4[j]))
 }
 
 x11()
@@ -120,13 +121,13 @@ persp(grid_k3, grid_k4, plot_grid, theta = 30)
 
 ############
 
-target_density_sampler <- function(niter, burnin, th0, Sig,y0,alfa,log_target)
+target_density_sampler <- function(niter, burnin, th0, Sig,y0,log_target)
 {
   # define the vector that contains the output MCMC sample
   th <- NULL
-  L = length(alfa)
-  
-  th0=c(th0,alfa)
+  #alfa = numeric(niter)
+  #alfa[1] = 1
+  th0=c(th0,1)
   
   nacp = 0 # number of accepted moves
   # Start from th0
@@ -135,7 +136,10 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,alfa,log_target)
     ## propose delta: the mean is given by the previous value 
     ## N.B: delta = c(th,alfa_i), we initially use a discrete uniform for alfa_i
     
-    delta <- c(as.vector(rmvnorm(1, mean = th0[1:2], sig = Sig)),sample(alfa,1))
+    th1 = as.vector(rmvnorm(1, mean = th0[1:2], sig = Sig))
+    alfa1 =   sample(x=c(0.2,0.4,0.6,0.8,1), size=1, replace=TRUE, prob=c(0.1,0.1,0.2,0.2,0.4))              
+    
+    delta <- c(th1,alfa1)
     
     # First consider the accept/reject ratio
     # numerator
@@ -154,24 +158,26 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,alfa,log_target)
       nacp = nacp + 1
     }
     
+    #alfa[i] = th0[3]
     
     if(i>burnin & th0[3] == 1)
     {
       th=rbind(th,th0)
+      cat("# accepted move at iteration =", i, "\n")
     }
-    if(i%%1000==0) cat("*** Iteration number ", i,"/", niter,"th=",tail(th,1) ,"\n")
+    if(i%%1000==0) cat("*** Iteration number ", i,"/", niter,"alfa=",th0[3], "th = ", th0[1:2], "\n")
   }
   cat("Acceptance rate =", nacp/niter, "\n")
   return(th)
 }
 
-Sig = matrix(data = c(1.788331e-05, -0.0000462595, -4.625950e-05, 0.0001702542),nrow=2,ncol=2)
-niter=60000
-burnin=10000
+Sig = matrix(data = c(0.05, 0, 0, 0.05),nrow=2,ncol=2)
+niter=20000
+burnin=0
 
-th0 = c(1.5,1)
-alfa = seq(0,1,by=0.2)
-th.post <- target_density_sampler(niter = niter, burnin = burnin, th0 = th0, Sig = Sig,y0 = y0,alfa = alfa,log_target)
+th0 = c(2.5,2)
+#alfa = seq(0,1,by=0.2)
+th.post <- target_density_sampler(niter = niter, burnin = burnin, th0 = th0, Sig = Sig,y0 = y0,log_target)
 dim(th.post)
 
 th.post.mc <- mcmc(th.post, start = 0, end = niter, thin = 1)
