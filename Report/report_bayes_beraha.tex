@@ -1,0 +1,80 @@
+\documentclass[12pt,a4paper]{article}
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[latin1]{inputenc}%
+\usepackage[a4paper,left=3cm,right=2cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{amsthm,amssymb}
+\usepackage{graphicx}
+\usepackage[fleqn]{amsmath}
+\usepackage{caption}
+\usepackage{subcaption} 
+\usepackage{subfig}
+\usepackage{mwe}
+\usepackage{bm}
+\setlength{\parindent}{4em}
+\setlength{\parskip}{1em}
+\renewcommand{\baselinestretch}{1.3}
+
+\newenvironment{theorem}[2][Theorem]{\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{lemma}[2][Lemma]{\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{exercise}[2][Exercise]{\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{reflection}[2][Reflection]{\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{proposition}[2][Proposition]{\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{corollary}[2][Corollary]{\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\newenvironment{definition}[2][Definition]{\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+
+
+\begin{document}
+\linespread{2}
+\title{Bayesian inference for differential equations}%replace X with the appropriate number
+\author{Mario Beraha\\ %replace with your name
+	Bayesian Statistics   prof. A. Guglielmi} 
+
+\maketitle
+
+\begin{center}
+	\includegraphics[width=.5\linewidth]{../grafici/logo_polimi.jpg}
+\end{center}
+
+\newpage
+
+\section{Introduzione}
+L'utilizzo di equazioni differenziali per modellizzare sistemi chimici e biologici ha, al giorno d'oggi, una storia ben consolidata; tuttavia, solo recentemente si è iniziato a porsi, e conseguentemente risolvere, il problema legato all'incertezza sul modello.
+
+In molte applicazioni, la modellizzazione del sistema in considerazione non è ben caratterizzata nè dal punto di vista della scelta del modello "corretto" nè per quanto riguarda i valori dei parametri dello stesso.
+
+L'incertezza in entrambi questi aspetti deve essere presa in considerazione in maniera sistematica se si vogliono fare simulazioni, o predizioni, in modo da evitare di giungere a conclusioni non giustificate o ingiustificatamente troppo ottimiste data l'incertezza di base.
+
+Come mostrato nelle prossime pagine, la metodologia dell'inferenza bayesiana fornisce un setting coerente per quantificare l'incertezza propagatasi nel modello.
+
+\section{Inferenza bayesiana}
+
+Si considerano i dati osservati $ \mathcal{D} \{\bm{y}, \bm t \} \ \bm y \ \in \ \mathbb{R}^N, \ t \ \in \ \mathbb{R}$, dove $\bm y$ è l'osservazione legata a un certo stimolo $t$, che può essere visto semplicemente come il tempo. L'obiettivo è di stabilire una relazione funzionale $\phi: \ t \mapsto \bm y$.
+
+Per fare ciò, definiamo la classe dei modelli che verranno presi in considerazione $\textit M = \{M_1,M_2 \dots M_k \}$ a cui è assegnata una prior (discreta) $\pi = \{\pi (M_j) \}$
+
+Se l'obiettivo è quello di fare previsione su un possibile valore $y_*$ dato uno specifico $t_*$, ossia calcolare $p(y_* | t_*, \mathcal{D})$, sia l'incertezza sui parametri che quella sul modello deve essere presa in considerazione.
+
+\'E facile osservare che:
+\begin{equation}
+	p(y_* | t_*, \mathcal{D}) = \sum_{k \in M} p(y_* | t_*, \mathcal{D}, M_k) \pi(M_k|\mathcal{D})	
+\end{equation}
+Ossia che la distribuzione predittiva è esprimibile come la media delle predittive di ogni modello. 
+Usando il teorema di Bayes per modelli dominati, si ha l'espressione della posterior
+\begin{equation}
+	\pi(M_k|\mathcal{D}) = \frac{p(\mathcal{D}|M_k) \pi(M_k)}{\sum_{ \in {M}} p(\mathcal{D}|M_l) \pi(M_l)}	
+\end{equation}
+
+
+\end{document}

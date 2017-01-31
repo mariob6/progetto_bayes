@@ -137,7 +137,7 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,log_target)
     ## N.B: delta = c(th,alfa_i), we initially use a discrete uniform for alfa_i
     
     th1 = as.vector(rmvnorm(1, mean = th0[1:2], sig = Sig))
-    alfa1 =   sample(x=c(0.2,0.4,0.6,0.8,1), size=1, replace=TRUE, prob=c(0.1,0.1,0.2,0.2,0.4))              
+    alfa1 =   sample(x=c(0.2,0.4,0.6,0.8,1), size=1, replace=TRUE, prob=c(1,0,0,0,0))              
     
     delta <- c(th1,alfa1)
     
@@ -163,7 +163,7 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,log_target)
     if(i>burnin & th0[3] == 1)
     {
       th=rbind(th,th0)
-      cat("# accepted move at iteration =", i, "\n")
+      #cat("# accepted move at iteration =", i, "\n")
     }
     if(i%%1000==0) cat("*** Iteration number ", i,"/", niter,"alfa=",th0[3], "th = ", th0[1:2], "\n")
   }
@@ -171,7 +171,7 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,log_target)
   return(th)
 }
 
-Sig = matrix(data = c(0.05, 0, 0, 0.05),nrow=2,ncol=2)
+Sig = matrix(data = c(0.1, 0, 0, 0.1),nrow=2,ncol=2)
 niter=20000
 burnin=0
 
@@ -185,3 +185,19 @@ th.post.mc <- mcmc(th.post, start = 0, end = niter, thin = 1)
 plot(th.post.mc)
 
 geweke.plot(th.post.mc, frac1 = 0.1, frac2 = 0.5, nbins = 20 )
+
+###################à
+
+th_star = c(2,1)
+
+alfa = 0
+log_target(th=th_star,y_obs,y0,alfa)
+
+alfa = 0.2
+log_target(th=th_star,y_obs,y0,alfa)
+
+alfa = 0.8
+log_target(th=th_star,y_obs,y0,alfa)
+
+alfa = 1
+log_target(th=th_star,y_obs,y0,alfa)
