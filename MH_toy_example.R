@@ -79,7 +79,7 @@ posterior <- function (th,y_obs,y0){
     out <- out + dmvnorm(y_obs[i,],mean = y_mod[i,], sigma = diag(0.5,2),log=T)
   }
   #Multiply times the prior
-  out = out + dmvnorm(th, mean = c(2,1), sigma = diag(0.1,2), log = T)
+  out = out + dmvnorm(th, mean = c(2,1), sigma = diag(0.1,nrow=2), log=T)
   return(out) + 132
 }
 
@@ -181,7 +181,7 @@ posterior <- function (th,y_obs,y0){
   }
 
   #Multiply times the prior
-  out = out + dmvnorm(th, mean = c(2,1), sigma = diag(0.1,2), log = T)
+  out = out + dmvnorm(th, mean = c(2,1), sigma = diag(0.1,nrow=2), log=T)
   return(out)
 }
 
@@ -271,7 +271,7 @@ metro_hastings <- function(niter, burnin, thin, th0, Sig,y0)
     {
       th[burnin/500 + (i-burnin)/thin,] = th0
     }
-    if(i%%1000==0) cat("*** Iteration number ", i,"/", niter ,"\n")
+    if(i%%1000==0) cat("*** Iteration number ", i,"/", niter,"alfa=",th0[3], "th = ", th0, "\n")
   }
   cat("Acceptance rate =", nacp/niter, "\n")
   return(th)
@@ -283,7 +283,7 @@ thin = 1
 
 
 
-th0 = c(1.5,1)
+th0 = c(2.5,2)
 th.post <- metro_hastings(niter = niter, burnin = burnin, thin = thin, th0 = th0, Sig = Sig, y0 = starting_point)
 
 dim(th.post)
