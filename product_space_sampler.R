@@ -2,6 +2,7 @@
 # Product Space Sampler #
 #########################
 source("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana\\simple_oscillator.R")
+source("/home/mario/Scrivania/progetto_bayes/simple_oscillator.R")
 # Define the taget density: p(th|y,alfa) = prod (p(th|y,alfa_i))
 # where p(th|y,alfa_i) is proportional to p(y|th)^alfa_i*p(th)
 
@@ -125,8 +126,13 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,log_target)
 {
   # define the vector that contains the output MCMC sample
   th <- NULL
+<<<<<<< HEAD
+  L = length(alfa)
+  
+=======
   #alfa = numeric(niter)
   #alfa[1] = 1
+>>>>>>> 52077dade9907cd57fa19e2db1ad70652ccbdff4
   th0=c(th0,1)
   
   nacp = 0 # number of accepted moves
@@ -158,6 +164,15 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,log_target)
       nacp = nacp + 1
     }
     
+<<<<<<< HEAD
+    cat("alfa=" ,th0[3], "\n")
+    if(i>burnin & th0[3] == 1)
+    {
+      th=rbind(th,th0)
+      cat("*** YEEEE \n")
+    }
+    if(i%%1000==0) cat("*** Iteration number ", i,"/", niter,"alfa= ",th0[3] ,"\n")
+=======
     #alfa[i] = th0[3]
     
     if(i>burnin & th0[3] == 1)
@@ -166,11 +181,21 @@ target_density_sampler <- function(niter, burnin, th0, Sig,y0,log_target)
       #cat("# accepted move at iteration =", i, "\n")
     }
     if(i%%1000==0) cat("*** Iteration number ", i,"/", niter,"alfa=",th0[3], "th = ", th0[1:2], "\n")
+>>>>>>> 52077dade9907cd57fa19e2db1ad70652ccbdff4
   }
   cat("Acceptance rate =", nacp/niter, "\n")
   return(th)
 }
 
+<<<<<<< HEAD
+Sig = matrix(data = c(1.788331e-05, -0.0000462595, -4.625950e-05, 0.0001702542),nrow=2,ncol=2)
+niter=10000
+burnin=0
+
+th0 = c(1.5,1)
+alfa = seq(0,1,by=0.05)
+th.post <- target_density_sampler(niter = niter, burnin = burnin, th0 = th0, Sig = Sig,y0 = y0,alfa = alfa,log_target)
+=======
 Sig = matrix(data = c(0.1, 0, 0, 0.1),nrow=2,ncol=2)
 niter=20000
 burnin=0
@@ -178,6 +203,7 @@ burnin=0
 th0 = c(2.5,2)
 #alfa = seq(0,1,by=0.2)
 th.post <- target_density_sampler(niter = niter, burnin = burnin, th0 = th0, Sig = Sig,y0 = y0,log_target)
+>>>>>>> 52077dade9907cd57fa19e2db1ad70652ccbdff4
 dim(th.post)
 
 th.post.mc <- mcmc(th.post, start = 0, end = niter, thin = 1)
