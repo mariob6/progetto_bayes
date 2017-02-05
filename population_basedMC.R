@@ -34,73 +34,117 @@ log_target <- function(th,y_obs,y0,t_n){
   return(out)
 }
 
-population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target)
-{
-  # define the vector that contains the output MCMC sample
-  th <- NULL
-  #alfa = numeric(niter)
-  #alfa[1] = 1
+population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, parallel)
+{ 
+  # th0 will be updated at each step, th will contail the output of interest (that is, when T_N = 1)
+  th <- matrix(nrow=niter-burnin,col=2)
   
   nacp = 0 # number of accepted moves
-  # Start from th0
+
   for(i in 2:(niter))
   {
-    for(j in 1:length(T_N)){
-      p0 = runif(1,0,1)
-      #### Choose between crossover and local move
-      if(p0<p_m){
-        #this is the local change
-        delta = as.vector(rmvnorm(1, mean = th0[j], sig = Sig))
-        lacp <- log_target(th = delta, y_obs = y_obs, y0 = y0, t_n=T_N[j])
-        lacp <- lacp - log_target(th = th0[j], y_obs = y_obs, y0 = y0, t_n=T_N[j])
-        
-        lgu <- log(runif(1))  
-        if(lgu < lacp)
-        {
-          th0[j] <- delta
-          nacp = nacp + 1
+    if(parallel){
+      
+      foreach(j=1:length(T_N), .packages = c("mvtnorm","deSolve")) %dopar% {
+      
+        p0 = runif(1,0,1)
+        #### Choose between crossover and local move
+        if(p0 <= p_m){
+          #this is the local change
+          delta = as.vector(rmvnorm(1, mean = th0[j,], sig = Sig))
+          lacp <- log_target(th = delta, y_obs = y_obs, y0 = y0, t_n=T_N[j])
+          lacp <- lacp - log_target(th = th0[j,], y_obs = y_obs, y0 = y0, t_n=T_N[j])
+          
+          lgu <- log(runif(1))  
+          if(lgu < lacp)
+          {
+            th0[j,] <- delta
+            nacp = nacp + 1
+          }
+        }else{
+          #this is the crossover operation
+          
         }
-      }else{
-        #this is the crossover operation
-        
+      }
+      
+    }else{
+      for(j in 1:length(T_N)){
+        p0 = runif(1,0,1)
+        #### Choose between crossover and local move
+        if(p0 <= p_m){
+          #this is the local change
+          delta = as.vector(rmvnorm(1, mean = th0[j,], sig = Sig))
+          lacp <- log_target(th = delta, y_obs = y_obs, y0 = y0, t_n=T_N[j])
+          lacp <- lacp - log_target(th = th0[j,], y_obs = y_obs, y0 = y0, t_n=T_N[j])
+          
+          lgu <- log(runif(1))  
+          if(lgu < lacp)
+          {
+            th0[j,] <- delta
+            nacp = nacp + 1
+          }
+        }else{
+          #this is the crossover operation
+          
+        }
       }
     }
+    # Try to exchange theta_l and theta_m where m = l+1 or m= l-1 if l=! 1 and l=! length(T_N)
     
+    l = sample(x=(1:length(T_N)),size=1,prob = rep(1/length(T_N),length(T_N)))
+    if(l>1 && l< length(T_N)){
+      u = runif(1)
+      m = l + 1*(u<=0.5) - 1*(u>0.5)
+    }else if(l==1){
+      m=2
+    }else{m=length(T_N)-1}
     
-    ## propose delta: the mean is given by the previous value 
-    ## N.B: delta = c(th,alfa_i), we initially use a discrete uniform for alfa_i
-    
-    th1 = as.vector(rmvnorm(1, mean = th0[1:2], sig = Sig))
-    alfa1 =   sample(x=c(0.2,0.4,0.6,0.8,1), size=1, replace=TRUE, prob=c(1,0,0,0,0))              
-    
-    delta <- c(th1,alfa1)
-    
-    # First consider the accept/reject ratio
-    # numerator
-    lacp <- log_target(th = delta[1:2], y_obs = y_obs, y0 = y0, alfa = delta[3])
-    # denominator
-    lacp <- lacp - log_target(th = th0[1:2], y_obs = y_obs, y0 = y0, alfa = th0[3])
-    
-    #lacp <- min(0, lacp)  
-    # Note: The proposal is symmetrical and therefore does not appear in the value of acceptance / rejection!
-    
-    lgu <- log(runif(1))  # lgu is negative
-    ## if u < acp accept the move
+    lacp = log_likelihood(th=th0[m,],y_obs=y_obs,y0=y0)*T_N[l] + log_likelihood(th=th0[l,],y_obs=y_obs,y0=y0)*T_N[m]
+    lacp = lacp -  (log_likelihood(th=th0[m,],y_obs=y_obs,y0=y0)*T_N[m] + log_likelihood(th=th0[l,],y_obs=y_obs,y0=y0)*T_N[l])
+    lgu <- log(runif(1))  
     if(lgu < lacp)
     {
-      th0 <- delta
+      th_aux = th0[l,]
+      th0[l,] <- th0[m,]
+      th0[m,] <- th_aux
       nacp = nacp + 1
     }
     
-    #alfa[i] = th0[3]
-    
-    if(i>burnin & th0[3] == 1)
-    {
-      th=rbind(th,th0)
-      #cat("# accepted move at iteration =", i, "\n")
+    if(i>burnin){
+      th[i-burnin,] = th0[length(T_N),]
     }
-    if(i%%1000==0) cat("*** Iteration number ", i,"/", niter,"alfa=",th0[3], "th = ", th0[1:2], "\n")
+    
+    if(i%%1000==0) cat("*** Iteration number ", i,"/", niter, "\n")
   }
   cat("Acceptance rate =", nacp/niter, "\n")
   return(th)
 }
+
+parallel = FALSE
+
+if(parallel){
+  library(foreach)
+  library(doParallel)
+  cores=detectCores()
+  if (cores == 1){
+    cat("cannot perform parallel on 1 cpu \n")
+    parallel = FALSE
+  }
+  cl <- makeCluster(cores[1]-1) #not to overload your computer
+  registerDoParallel(cl)
+  if (cl==1){
+    parallel = FALSE
+  }
+  
+}
+
+niter = 10000
+burnin = 1000
+Sig = matrix(data = c(0.1, 0, 0, 0.1),nrow=2,ncol=2)
+
+th0 = matrix( rep(c(1.5,1.5),length(T_N)),ncol=2, byrow=T)
+th.post <- population_MCMC(niter = niter, burnin=burnin, th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=1,log_target=log_target, parallel = parallel)
+dim(th.post)
+th.post.mc <- mcmc(th.post, start = burnin+ 1, end = niter, thin = 1)
+
+plot(th.post.mc)
