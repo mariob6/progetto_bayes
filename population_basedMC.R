@@ -37,7 +37,6 @@ log_target <- function(th,y_obs,y0,t_n){
 population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, parallel)
 { 
   # th0 will be updated at each step, th will contail the output of interest (that is, when T_N = 1)
-  th <- matrix(nrow=niter-burnin,ncol=2)
   
   nacp = 0 # number of accepted moves
 
@@ -140,9 +139,9 @@ if(parallel){
 
 niter = 10000
 burnin = 1000
-Sig = matrix(data = c(0.05, 0, 0, 0.05),nrow=2,ncol=2)
+Sig = matrix(data = c(0.1, 0, 0, 0.1),nrow=2,ncol=2)
 
-th0 = matrix( rep(c(2,1.5),length(T_N)),ncol=2, byrow=T)
+th0 = matrix( rep(c(1.5,1.5),length(T_N)),ncol=2, byrow=T)
 th.post <- population_MCMC(niter = niter, burnin=burnin, th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=1,log_target=log_target, parallel = parallel)
 dim(th.post)
 th.post.mc <- mcmc(th.post, start = burnin+ 1, end = niter, thin = 1)
