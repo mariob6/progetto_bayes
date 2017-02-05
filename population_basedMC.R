@@ -37,7 +37,7 @@ log_target <- function(th,y_obs,y0,t_n){
 population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, parallel)
 { 
   # th0 will be updated at each step, th will contail the output of interest (that is, when T_N = 1)
-  th <- NULL
+  th <- matrix(nrow=niter-burnin,col=2)
   
   nacp = 0 # number of accepted moves
 
@@ -58,7 +58,7 @@ population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, pa
           lgu <- log(runif(1))  
           if(lgu < lacp)
           {
-            th0[j] <- delta
+            th0[j,] <- delta
             nacp = nacp + 1
           }
         }else{
@@ -80,7 +80,7 @@ population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, pa
           lgu <- log(runif(1))  
           if(lgu < lacp)
           {
-            th0[j] <- delta
+            th0[j,] <- delta
             nacp = nacp + 1
           }
         }else{
@@ -111,7 +111,7 @@ population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, pa
     }
     
     if(i>burnin){
-      th=rbind(th,th0[length(T_N),])
+      th[i-burnin,] = th0[length(T_N),]
     }
     
     if(i%%1000==0) cat("*** Iteration number ", i,"/", niter, "\n")
