@@ -3,6 +3,23 @@
 ################################
 
 source("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana\\simple_oscillator.R")
+#source("/home/mario/Scrivania/progetto_bayes/simple_oscillator.R")
+
+if(parallel){
+  library(foreach)
+  library(doParallel)
+  cores=detectCores()
+  if (cores == 1){
+    cat("cannot perform parallel on 1 cpu \n")
+    parallel = FALSE
+  }
+  cl <- makeCluster(cores[1]-1) #not to overload your computer
+  registerDoParallel(cl)
+  if (cores==2){
+    parallel = FALSE
+  }
+  
+}
 
 N = 5 #number of chains
 T_N = seq(0.2,1, length = 5) #temperature ladder
@@ -34,39 +51,18 @@ log_target <- function(th,y_obs,y0,t_n){
   return(out)
 }
 
-population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, parallel)
+population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_target, parallel)
 { 
   # th0 will be updated at each step, th will contail the output of interest (that is, when T_N = 1)
+<<<<<<< HEAD
+=======
+  th <- matrix(nrow= ceiling((niter-burnin)/thin), ncol=2)
+>>>>>>> 9fa6d7143ab674a16c85f1f2ca1df61ef2469656
   
   nacp = 0 # number of accepted moves
 
   for(i in 2:(niter))
   {
-    if(parallel){
-      
-      foreach(j=1:length(T_N), .packages = c("mvtnorm","deSolve")) %dopar% {
-      
-        p0 = runif(1,0,1)
-        #### Choose between crossover and local move
-        if(p0 <= p_m){
-          #this is the local change
-          delta = as.vector(rmvnorm(1, mean = th0[j,], sig = Sig))
-          lacp <- log_target(th = delta, y_obs = y_obs, y0 = y0, t_n=T_N[j])
-          lacp <- lacp - log_target(th = th0[j,], y_obs = y_obs, y0 = y0, t_n=T_N[j])
-          
-          lgu <- log(runif(1))  
-          if(lgu < lacp)
-          {
-            th0[j,] <- delta
-            nacp = nacp + 1
-          }
-        }else{
-          #this is the crossover operation
-          
-        }
-      }
-      
-    }else{
       for(j in 1:length(T_N)){
         p0 = runif(1,0,1)
         #### Choose between crossover and local move
@@ -75,9 +71,9 @@ population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, pa
           delta = as.vector(rmvnorm(1, mean = th0[j,], sig = Sig))
           lacp <- log_target(th = delta, y_obs = y_obs, y0 = y0, t_n=T_N[j])
           lacp <- lacp - log_target(th = th0[j,], y_obs = y_obs, y0 = y0, t_n=T_N[j])
-          
+          #cat(lacp,"\n")
           lgu <- log(runif(1))  
-          if(lgu < lacp)
+          if(!(is.na(lacp)) & lgu < lacp)
           {
             th0[j,] <- delta
             nacp = nacp + 1
@@ -87,7 +83,7 @@ population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, pa
           
         }
       }
-    }
+    
     # Try to exchange theta_l and theta_m where m = l+1 or m= l-1 if l=! 1 and l=! length(T_N)
     
     l = sample(x=(1:length(T_N)),size=1,prob = rep(1/length(T_N),length(T_N)))
@@ -109,8 +105,8 @@ population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, pa
       nacp = nacp + 1
     }
     
-    if(i>burnin){
-      th[i-burnin,] = th0[length(T_N),]
+    if(i>burnin & (i-burnin)%%thin==0){
+      th[(i-burnin)/thin,] = th0[length(T_N),]
     }
     
     if(i%%1000==0) cat("*** Iteration number ", i,"/", niter, "\n")
@@ -121,28 +117,23 @@ population_MCMC <- function(niter, burnin, th0, T_N ,Sig, y0, p_m,log_target, pa
 
 parallel = FALSE
 
-if(parallel){
-  library(foreach)
-  library(doParallel)
-  cores=detectCores()
-  if (cores == 1){
-    cat("cannot perform parallel on 1 cpu \n")
-    parallel = FALSE
-  }
-  cl <- makeCluster(cores[1]-1) #not to overload your computer
-  registerDoParallel(cl)
-  if (cl==1){
-    parallel = FALSE
-  }
-  
-}
 
 niter = 10000
+<<<<<<< HEAD
 burnin = 1000
 Sig = matrix(data = c(0.1, 0, 0, 0.1),nrow=2,ncol=2)
 
 th0 = matrix( rep(c(1.5,1.5),length(T_N)),ncol=2, byrow=T)
 th.post <- population_MCMC(niter = niter, burnin=burnin, th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=1,log_target=log_target, parallel = parallel)
+=======
+burnin = 100
+thin = 10 
+Sig = matrix(data = c(0.05, 0, 0, 0.05),nrow=2,ncol=2)
+
+th0 = matrix( rep(c(1,0.5),length(T_N)),ncol=2, byrow=T)
+
+th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=1,log_target=log_target, parallel = parallel)
+>>>>>>> 9fa6d7143ab674a16c85f1f2ca1df61ef2469656
 dim(th.post)
 th.post.mc <- mcmc(th.post, start = burnin+ 1, end = niter, thin = 1)
 
