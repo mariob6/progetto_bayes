@@ -9,7 +9,7 @@ set.seed(21122016)
 N=25
 t_obs=runif(25,-2,2)
 t_obs=sort(t_obs)
-y_obs=0.219*t_obs^3 + 0.5287*t_obs^2-0.805*t_obs + rnorm(N,0,1)
+y_obs=0.219*t_obs^3 + 0.5287*t_obs^2-0.805*t_obs + rnorm(N,0,0.5)
 
 t_true=seq(-2.02,2.02,by=0.1)
 y_true=0.219*t_true^3 + 0.5287*t_true^2-0.805*t_true
@@ -82,6 +82,7 @@ for(k in 1:K){
 mu_star=0
 L = length(t_true)
 y_pred = numeric(L)
+var_y_pred =numeric(L)
 
 for(i in 1:L){
   t_star=t_true[i]
@@ -92,15 +93,25 @@ for(i in 1:L){
     }
     mu = solve(get(paste("Sigma",k,sep="_")))%*%t(get(paste("PHI",k,sep="_")))%*%y_obs
     y_pred[i] = y_pred[i] + t(phi)%*%mu%*%posterior_models[k]
+    delta = 1 + 0.5+(t(y_obs)%*%y_obs - t(mu)%*%solve(get(paste("Sigma",k,sep="_")))%*%mu)
+    psi = 1 + t(phi)%*%solve(get(paste("Sigma",k,sep="_")))%*%phi
+    var_y_pred[i] = var_y_pred[i] + ((N+2)/(N-2)*delta*psi + t(phi)%*%mu%*%t(mu)%*%phi)*posterior_models[k] 
   }
+  var_y_pred[i] = var_y_pred[i] - (y_pred[i])^2
 }
 
 windows()
-plot(t_obs,y_obs)
-lines(t_true,y_true,col="red")
-lines(t_true,y_pred,col="dark green")
+plot(t_obs,y_obs,pch=16,ylim=c(-2,3),main="Linear model prediction: polynomial basis")
+lines(t_true,y_true,col="red",lwd=2)
+lines(t_true,y_pred,col="dark green",lwd=2)
+lines(t_true, y_pred + sqrt(var_y_pred)/5, col = 'grey')
+lines(t_true, y_pred - sqrt(var_y_pred)/5, col = 'grey')
+
+polygon(c(t_true,rev(t_true)), c(y_pred + sqrt(var_y_pred)/5, rev(y_pred - sqrt(var_y_pred)/5)), col=rgb(0,	0, 0,0.15), border = NA)
+legend("topright", c("observed values","true values","predicted values"),fill=c("black","red","dark green"))
+
 windows()
-barplot(posterior_models)
+barplot(posterior_models,names.arg=c("1","2","3","4","5","6","7","8","9","10"),xlab="Polynomial degree", main="Posterior distribution over the models",col="dark blue")
 
 
 ##################################
@@ -118,7 +129,7 @@ t_obs=runif(N,0,1)
 t_obs=sort(t_obs)
 #y_obs=0.219*t_obs^3 + 0.5287*t_obs^2-0.805*t_obs + rnorm(N,0,0.1)
 
-y_obs = sin(2*pi*t_obs) + 4*cos(4*pi*t_obs) + rnorm(N,0,0.1)
+y_obs = sin(2*pi*t_obs) + 4*cos(4*pi*t_obs) + rnorm(N,0,0.5)
 
 t_true=seq(-.02,1.02,by=0.01)
 #y_true=0.219*t_true^3 + 0.5287*t_true^2-0.805*t_true
@@ -221,6 +232,7 @@ for(k in 1:K){
 
 L = length(t_true)
 y_pred = numeric(L)
+var_y_pred=numeric(L)
 
 for(i in 1:L){
   t_star=t_true[i]
@@ -233,13 +245,24 @@ for(i in 1:L){
     }
     mu = solve(get(paste("Sigma",k,sep="_")))%*%t(get(paste("PHI",k,sep="_")))%*%y_obs
     y_pred[i] = y_pred[i] + t(phi)%*%mu%*%posterior_models[k]
+    delta = 1 + 0.5+(t(y_obs)%*%y_obs - t(mu)%*%solve(get(paste("Sigma",k,sep="_")))%*%mu)
+    psi = 1 + t(phi)%*%solve(get(paste("Sigma",k,sep="_")))%*%phi
+    var_y_pred[i] = var_y_pred[i] + ((N+2)/(N-2)*delta*psi + t(phi)%*%mu%*%t(mu)%*%phi)*posterior_models[k] 
   }
+  var_y_pred[i] = var_y_pred[i] - (y_pred[i])^2
 }
 
-#windows()
-plot(t_obs,y_obs)
-lines(t_true,y_true,col="red")
-lines(t_true,y_pred,col="dark green")
+windows()
+plot(t_obs,y_obs,pch=16, ylim = c(-7,5),main="Linear model prediction: Fourier Basis")
+lines(t_true,y_true,col="red",lwd=2)
+lines(t_true,y_pred,col="dark green",lwd=2)
+lines(t_true, y_pred + sqrt(var_y_pred)/5, col = 'grey')
+lines(t_true, y_pred - sqrt(var_y_pred)/5, col = 'grey')
+
+polygon(c(t_true,rev(t_true)), c(y_pred + sqrt(var_y_pred)/5, rev(y_pred - sqrt(var_y_pred)/5)), col=rgb(0,	0, 0,0.15), border = NA)
+legend("topright", c("true values","predicted values"),fill=c("red","dark green"))
+
+
 windows()
 barplot(posterior_models)
 

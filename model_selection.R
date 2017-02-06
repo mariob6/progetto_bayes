@@ -77,18 +77,21 @@ if(K>1){
     }
   }
   
-  windows()
-  plot(t_obs,y_obs,main = paste(K))
-  lines(t_true,y_true,col="red")
-  lines(t_true,y_pred,col="dark green")
+  #windows()
+  plot(t_obs,y_obs,main = paste(K),pch=16)
+  lines(t_true,y_true,col="red",lwd=2)
+  lines(t_true,y_pred,col="dark green",lwd=2)
+  
  # windows()
  # barplot(posterior_models)
   
 }
-
+windows()
+par(mfrow=c(2,5))
 
 for(k in 2:10){
   k
   polinomail_model_prediction(k,t_obs,y_obs)
 }
 
+legend("topright", c("true values","predicted values"),fill=c("red","dark green"))
