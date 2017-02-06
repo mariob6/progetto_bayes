@@ -1,7 +1,7 @@
 ##############################################################
 ## Launching 10 MH chains in parallel on Girolami's example ##
 ##############################################################
-
+setwd("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana")
 library(mvtnorm)
 library(deSolve)
 library(coda)
@@ -234,3 +234,6 @@ for(i in seq(1,17,by=2)){
   points(finalMatrix[,i],finalMatrix[,(i+1)])
 }
 
+this.post <- finalMatrix[,15:16]
+this.post.mcmc <- mcmc(this.post,start=burnin+1,end=niter,thin=thin)
+plot(this.post.mcmc)
