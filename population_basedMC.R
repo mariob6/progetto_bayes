@@ -25,8 +25,8 @@ N = 5 #number of chains
 T_N = seq(0.2,1, length = 5) #temperature ladder
 
 log_prior <- function(th){
-  out = dmvnorm(th, mean = c(2,1), sigma = diag(1,nrow=2), log=T)
-  #out = log(dgamma(th[1],16,8)) + log(dgamma(th[2],8,8))
+  #out = dmvnorm(th, mean = c(2,1), sigma = diag(1,nrow=2), log=T)
+  out = log(dgamma(th[1],1,1)) + log(dgamma(th[2],1,1))
   return(out)
 }
 
@@ -115,7 +115,7 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
 parallel = FALSE
 
 
-niter = 100000
+niter = 60000
 burnin = 1000
 thin = 10 
 Sig = matrix(data = c(0.05, 0, 0, 0.05),nrow=2,ncol=2)
