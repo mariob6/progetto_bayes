@@ -124,7 +124,7 @@ th0 = matrix( rep(c(1,0.5),length(T_N)),ncol=2, byrow=T)
 
 th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=1,log_target=log_target, parallel = parallel)
 dim(th.post)
-write.table(th.post, file = "output_pop_MCMC22.txt",row.names = F)
+write.table(th.post, file = "output_pop_MCMC1201.txt",row.names = F)
 th.post.mc <- mcmc(th.post, start = burnin+ 1, end = niter, thin = thin)
 
 x11()
