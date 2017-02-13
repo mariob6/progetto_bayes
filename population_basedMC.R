@@ -144,7 +144,25 @@ th0 = matrix( c(runif(N,1,3.5),runif(N,0.5,3)),ncol=2, byrow=T)
 th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.95,log_target=log_target, parallel = parallel)
 dim(th.post)
 write.table(th.post, file = "output_pop_MCMC1302.txt",row.names = F)
-#th.post<-read.table(file="output_pop_MCMC1201.txt",header=T)
+#th.post<-read.table(file="output_pop_MCMC.txt",header=T)
+
+# Plotting the markov chain in the state space
+
+grid_k3 = seq(1,3.5,by=0.1)
+grid_k4 = seq(0.5,3,by=0.1)
+t_n = 1
+
+plot_grid = matrix(nrow=length(grid_k3), ncol=length(grid_k4))
+for(i in (1:length(grid_k3))){
+  for(j in (1:length(grid_k4)))
+    plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, t_n = t_n)
+}
+
+image(plot_grid)
+points(th.post)
+contour(plot_grid, add=TRUE)
+
+
 th.post.mc <- mcmc(th.post, start = burnin+ 1, end = niter, thin = thin)
 
 x11()
