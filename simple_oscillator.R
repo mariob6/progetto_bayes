@@ -38,6 +38,6 @@ y_true = ode(y0,t_obs,circ_oscillator,c(k1,k2,k3,k4,k5),method = "ode45")[,3]
 
 N = length(y_true)
 
-noise = rnorm(N-1,mean=0,sd=1)
+noise = rnorm(N-1,mean=0,sd=0.45)
 y_obs = y_true
 y_obs[2:N] = y_true[2:N] + noise
