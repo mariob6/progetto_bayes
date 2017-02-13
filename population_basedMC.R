@@ -77,7 +77,26 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
           }
         }else{
           #this is the crossover operation
+          lm = sample(N,2)
+          l = lm[1]
+          m = lm[2]
+          c=sample(2,1)
+          #crossover
+          th1 = th0[l,]
+          th1[c:2] = th0[m, c:2]
+          th2 = th0[m,]
+          th2[c:2] = th0[l,c:2]
           
+          #acceptance-rejection
+            lacp = log_likelihood(th=th1,y_obs=y_obs,y0=y0)*T_N[l] + log_likelihood(th=th2,y_obs=y_obs,y0=y0)*T_N[m]
+            lacp = lacp -  (log_likelihood(th=th0[l,],y_obs=y_obs,y0=y0)*T_N[l] + log_likelihood(th=th0[m,],y_obs=y_obs,y0=y0)*T_N[m])
+            lgu <- log(runif(1))  
+            if(lgu < lacp)
+            {
+              th0[l,] <- th1
+              th0[m,] <- th2
+              nacp = nacp + 1
+            }
         }
       }
     
@@ -120,11 +139,12 @@ burnin = 1000
 thin = 10 
 Sig = matrix(data = c(0.05, 0, 0, 0.05),nrow=2,ncol=2)
 
-th0 = matrix( rep(c(1,0.5),length(T_N)),ncol=2, byrow=T)
+th0 = matrix( c(runif(N,1,3.5),runif(N,0.5,3)),ncol=2, byrow=T)
 
 th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=1,log_target=log_target, parallel = parallel)
 dim(th.post)
-write.table(th.post, file = "output_pop_MCMC1201.txt",row.names = F)
+write.table(th.post, file = "output_pop_MCMC1302.txt",row.names = F)
+#th.post<-read.table(file="output_pop_MCMC1201.txt",header=T)
 th.post.mc <- mcmc(th.post, start = burnin+ 1, end = niter, thin = thin)
 
 x11()
