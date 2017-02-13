@@ -141,7 +141,7 @@ Sig = matrix(data = c(0.05, 0, 0, 0.05),nrow=2,ncol=2)
 
 th0 = matrix( c(runif(N,1,3.5),runif(N,0.5,3)),ncol=2, byrow=T)
 
-th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=1,log_target=log_target, parallel = parallel)
+th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.95,log_target=log_target, parallel = parallel)
 dim(th.post)
 write.table(th.post, file = "output_pop_MCMC1302.txt",row.names = F)
 #th.post<-read.table(file="output_pop_MCMC1201.txt",header=T)
