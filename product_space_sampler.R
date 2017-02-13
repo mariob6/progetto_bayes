@@ -6,7 +6,7 @@ source("/home/mario/Scrivania/progetto_bayes/simple_oscillator.R")
 # Define the taget density: p(th|y,alfa) = prod (p(th|y,alfa_i))
 # where p(th|y,alfa_i) is proportional to p(y|th)^alfa_i*p(th)
 
-L = 11
+L = 4
   
 alfa = numeric(L)
 
@@ -15,20 +15,19 @@ alfa = seq(0,1,length=L)
 # A function defining the prior
 
 prior <- function(th){
-  return(dgamma(th[1],16,8)*dgamma(th[2],8,8))
+  return(dgamma(th[1],2,0.8)) + log(dgamma(th[2],2,0.8))
 }
 
 log_prior <- function(th){
-  out = dmvnorm(th, mean = c(2,1), sigma = diag(0.1,nrow=2), log=T)
-  #out = log(dgamma(th[1],16,8)) + log(dgamma(th[2],8,8))
+  #out = dmvnorm(th, mean = c(2,1), sigma = diag(0.1,nrow=2), log=T)
+  out = log(dgamma(th[1],1,1)) + log(dgamma(th[2],1,1))
   return(out)
 }
 
 # A function defining the likelihood
 
 likelihood <- function (th,y_obs,y0){
-  n = dim(y_obs)[1]
-  m = dim(y_obs)[2]
+  n = length(y_obs)
   times = seq(0,30, by=0.5)
   
   y_mod = ode(y0,times,circ_oscillator,c(72,1,th[1],th[2],1),method = "ode45")[,3]
@@ -38,7 +37,7 @@ likelihood <- function (th,y_obs,y0){
   #define the likelihood
   for(i in 1:n)
   {
-    out <- out * dnorm(y_obs[i,],mean = y_mod[i,], sigma = 0.5 ,log=F)
+    out <- out * dnorm(y_obs[i],mean = y_mod[i], sd = 0.5 ,log=F)
   }
   return(out)
 }
@@ -61,7 +60,7 @@ log_likelihood <- function (th,y_obs,y0){
 
 # A function defining the target density
 
-target <- function(th,y_obs,y0,alfa,likelihood,prior){
+target <- function(th,y_obs,y0,alfa){
     return(likelihood(th,y_obs,y0)^alfa * prior(th) )
 }
 
@@ -72,52 +71,76 @@ log_target <- function(th,y_obs,y0,alfa){
 ###########
 # Plot the log_target for different choices of alfa
 
-grid_k3 = seq(0,5,by=0.1)
-grid_k4 = seq(0,5,by=0.1)
+grid_k3 = seq(1,4.5,by=0.1)
+grid_k4 = seq(0.5,3.5,by=0.1)
 
 alfa = 0;
 
 plot_grid = matrix(nrow=length(grid_k3), ncol=length(grid_k4))
 for(i in (1:length(grid_k3))){
   for(j in (1:length(grid_k4)))
-    plot_grid[i,j] = log_prior(th=c(grid_k3[i],grid_k4[j]))
+    plot_grid[i,j] = prior(th=c(grid_k3[i],grid_k4[j]))
 }
 
-x11()
-persp(grid_k3, grid_k4, plot_grid, theta = 30)
+nbcol = 100
+color = rev(rainbow(nbcol, start = 0/6, end = 4/6))
+zcol  = cut(plot_grid, nbcol)
+p<-persp3d(grid_k3, grid_k4, plot_grid, theta = 50,phi=25, col=color[zcol],
+        ticktype="detailed", zlim= c(0,0.5),xlab = "k3", ylab= "k4", zlab="prior",axes=TRUE)
+rgl.snapshot("prior_oscillator.png")
+
+
+#######################
 
 alfa = 0.4
 
 plot_grid = matrix(nrow=length(grid_k3), ncol=length(grid_k4))
 for(i in (1:length(grid_k3))){
   for(j in (1:length(grid_k4)))
-    plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, alfa=alfa,log_likelihood = log_likelihood,log_prior = log_prior)
+    plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, alfa=alfa)
 }
 
-x11()
-persp(grid_k3, grid_k4, plot_grid, theta = 30)
+nbcol = 100
+color = rev(rainbow(nbcol, start = 0/6, end = 4/6))
+zcol  = cut(plot_grid, nbcol)
+p<-persp3d(grid_k3, grid_k4, plot_grid, theta = 50,phi=25, col=color[zcol],
+           ticktype="detailed", zlim = c(-1e05,1),xlab = "k3", ylab= "k4", zlab="",axes=TRUE)
+rgl.snapshot("alfa04.png")
+
+#################
 
 alfa = 0.75
 
 plot_grid = matrix(nrow=length(grid_k3), ncol=length(grid_k4))
 for(i in (1:length(grid_k3))){
   for(j in (1:length(grid_k4)))
-    plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, alfa=alfa,log_likelihood = log_likelihood,log_prior = log_prior)
+    plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, alfa=alfa)
 }
 
-x11()
-persp(grid_k3, grid_k4, plot_grid, theta = 30)
+nbcol = 100
+color = rev(rainbow(nbcol, start = 0/6, end = 4/6))
+zcol  = cut(plot_grid, nbcol)
+p<-persp3d(grid_k3, grid_k4, plot_grid, theta = 50,phi=25, col=color[zcol],
+           ticktype="detailed", zlim = c(-1e05,1),xlab = "k3", ylab= "k4", zlab="",axes=TRUE)
+rgl.snapshot("alfa075.png")
+
+
+###########
 
 alfa = 1
 
 plot_grid = matrix(nrow=length(grid_k3), ncol=length(grid_k4))
 for(i in (1:length(grid_k3))){
   for(j in (1:length(grid_k4)))
-    plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, alfa=alfa,log_likelihood = log_likelihood,log_prior = log_prior)
+    plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, alfa=alfa)
 }
 
-x11()
-persp(grid_k3, grid_k4, plot_grid, theta = 30)
+nbcol = 100
+color = rev(rainbow(nbcol, start = 0/6, end = 4/6))
+zcol  = cut(plot_grid, nbcol)
+p<-persp3d(grid_k3, grid_k4, plot_grid, theta = 50,phi=25, col=color[zcol],
+           ticktype="detailed", zlim = c(-2e05,1),xlab = "k3", ylab= "k4", zlab="",axes=TRUE)
+rgl.snapshot("posterior.png")
 
 
 ############
