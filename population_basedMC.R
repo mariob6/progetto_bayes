@@ -55,12 +55,12 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
 { 
   # th0 will be updated at each step, th will contail the output of interest (that is, when T_N = 1)
   th <- matrix(nrow= ceiling((niter-burnin)/thin), ncol=2)
-
+  N = length(T_N)
   nacp = 0 # number of accepted moves
 
   for(i in 1:(niter))
   {
-      for(j in 1:length(T_N)){
+      for(j in 1:N){
         p0 = runif(1,0,1)
         #### Choose between crossover and local move
         if(p0 <= p_m){
@@ -82,28 +82,28 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
       }
     
     # Try to exchange theta_l and theta_m where m = l+1 or m= l-1 if l=! 1 and l=! length(T_N)
-    
-    l = sample(x=(1:length(T_N)),size=1,prob = rep(1/length(T_N),length(T_N)))
-    if(l>1 && l< length(T_N)){
-      u = runif(1)
-      m = l + 1*(u<=0.5) - 1*(u>0.5)
-    }else if(l==1){
-      m=2
-    }else{m=length(T_N)-1}
-    
-    lacp = log_likelihood(th=th0[m,],y_obs=y_obs,y0=y0)*T_N[l] + log_likelihood(th=th0[l,],y_obs=y_obs,y0=y0)*T_N[m]
-    lacp = lacp -  (log_likelihood(th=th0[m,],y_obs=y_obs,y0=y0)*T_N[m] + log_likelihood(th=th0[l,],y_obs=y_obs,y0=y0)*T_N[l])
-    lgu <- log(runif(1))  
-    if(lgu < lacp)
-    {
-      th_aux = th0[l,]
-      th0[l,] <- th0[m,]
-      th0[m,] <- th_aux
-      nacp = nacp + 1
+    for(i in 1:N){
+      l = sample(x=(1:N),size=1,prob = rep(1/N,N))
+      if(l>1 && l< length(T_N)){
+        u = runif(1)
+        m = l + 1*(u<=0.5) - 1*(u>0.5)
+      }else if(l==1){
+        m=2
+      }else{m=N-1}
+      
+      lacp = log_likelihood(th=th0[m,],y_obs=y_obs,y0=y0)*T_N[l] + log_likelihood(th=th0[l,],y_obs=y_obs,y0=y0)*T_N[m]
+      lacp = lacp -  (log_likelihood(th=th0[m,],y_obs=y_obs,y0=y0)*T_N[m] + log_likelihood(th=th0[l,],y_obs=y_obs,y0=y0)*T_N[l])
+      lgu <- log(runif(1))  
+      if(lgu < lacp)
+      {
+        th_aux = th0[l,]
+        th0[l,] <- th0[m,]
+        th0[m,] <- th_aux
+        nacp = nacp + 1
+      }
     }
-    
     if(i>burnin & (i-burnin)%%thin==0){
-      th[(i-burnin)/thin,] = th0[length(T_N),]
+      th[(i-burnin)/thin,] = th0[N,]
     }
     
     if(i%%1000==0) cat("*** Iteration number ", i,"/", niter, "\n")
@@ -124,7 +124,7 @@ th0 = matrix( rep(c(1,0.5),length(T_N)),ncol=2, byrow=T)
 
 th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=1,log_target=log_target, parallel = parallel)
 dim(th.post)
-write.table(th.post, file = "output_pop_MCMC1201.txt",row.names = F)
+write.table(th.post, file = "output_pop_MCMC22.txt",row.names = F)
 th.post.mc <- mcmc(th.post, start = burnin+ 1, end = niter, thin = thin)
 
 x11()
