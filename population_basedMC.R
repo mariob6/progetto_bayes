@@ -1,7 +1,7 @@
 ################################
 # Population based Monte Carlo #
 ################################
-
+setwd("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana")
 source("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana\\simple_oscillator.R")
 #source("/home/mario/Scrivania/progetto_bayes/simple_oscillator.R")
 
@@ -21,8 +21,8 @@ if(parallel){
   
 }
 
-N = 5 #number of chains
-T_N = c(0,0.2,0.4,0.75,1) #temperature ladder
+N = 6 #number of chains
+T_N = c(0,0.1,0.25,0.5,0.75,1) #temperature ladder
 
 log_prior <- function(th){
   #out = dmvnorm(th, mean = c(2,1), sigma = diag(1,nrow=2), log=T)
@@ -145,12 +145,12 @@ th0[5,] = c(3,3)
 th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.95,log_target=log_target, parallel = parallel)
 dim(th.post)
 write.table(th.post, file = "output_pop_MCMC1402v2.txt",row.names = F)
-#th.post<-read.table(file="output_pop_MCMC.txt",header=T)
+#th.post<-read.table(file="output_pop_MCMC1402.txt",header=T)
 
 # Plotting the markov chain in the state space
 
-grid_k3 = seq(1.9,2.5,by=0.1)
-grid_k4 = seq(0.5,3,by=0.1)
+grid_k3 = seq(1,4.5,by=0.1)
+grid_k4 = seq(0.5,3.5,by=0.1)
 t_n = 1
 
 plot_grid = matrix(nrow=length(grid_k3), ncol=length(grid_k4))
@@ -159,9 +159,9 @@ for(i in (1:length(grid_k3))){
     plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, t_n = t_n)
 }
 
-image(grid_k3,grid_k4,plot_grid)
-points(th.post)
-contour(plot_grid, add=TRUE)
+persp(grid_k3,grid_k4,plot_grid,zlim=c(-1e05,1))
+points(th.post,pch=16)
+contour(grid_k3,grid_k4,plot_grid,zlim=c(-2e05,0))
 
 
 th.post.mc <- mcmc(th.post, start = burnin+ 1, end = niter, thin = thin)

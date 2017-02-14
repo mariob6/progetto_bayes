@@ -3,6 +3,7 @@
 library(mvtnorm)
 library(deSolve)
 library(coda)
+#library(rgl)
 
 set.seed(09012017)
 # Model: dx/dt = k1/(36 + k2* y) - k3
