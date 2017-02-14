@@ -21,8 +21,8 @@ if(parallel){
   
 }
 
-N = 6 #number of chains
-T_N = c(0,0.1,0.25,0.5,0.75,1) #temperature ladder
+N = 10 #number of chains
+T_N = c(0,0.05,0.1,0.2,0,32,0.52,0.75,0.9,1) #temperature ladder
 
 log_prior <- function(th){
   #out = dmvnorm(th, mean = c(2,1), sigma = diag(1,nrow=2), log=T)
@@ -135,16 +135,16 @@ parallel = FALSE
 
 
 niter = 60000
-burnin = 1
+burnin = 0
 thin = 10 
 Sig = matrix(data = c(0.05, 0, 0, 0.05),nrow=2,ncol=2)
 
-th0 = matrix( c(runif(N,1,3.5),runif(N,0.5,3)),ncol=2, byrow=T)
-th0[5,] = c(3,3)
+th0 = matrix( c(runif(N,0,5),runif(N,0,5)),ncol=2, byrow=T)
+th0[N,] = c(3.5,3.5)
 
 th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.95,log_target=log_target, parallel = parallel)
 dim(th.post)
-write.table(th.post, file = "output_pop_MCMC1402v2.txt",row.names = F)
+write.table(th.post, file = "output_pop_MCMC1502.txt",row.names = F)
 #th.post<-read.table(file="output_pop_MCMC1402.txt",header=T)
 
 # Plotting the markov chain in the state space
