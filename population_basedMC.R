@@ -21,8 +21,13 @@ if(parallel){
   
 }
 
-N = 25 #number of chains
-T_N = seq(0,1,length=25) #temperature ladder
+N = 40 #number of chains
+T_N = numeric(N) #temperature ladder
+
+for(n in 1:N){
+  T_N[n]=n^5/N^5
+}
+
 
 log_prior <- function(th){
   #out = dmvnorm(th, mean = c(2,1), sigma = diag(1,nrow=2), log=T)
@@ -134,9 +139,9 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
 parallel = FALSE
 
 
-niter = 11000
+niter = 6000
 burnin = 0
-thin = 10 
+thin = 1 
 Sig = matrix(data = c(0.005, 0, 0, 0.005),nrow=2,ncol=2)
 
 th0 = matrix( c(runif(N,0,5),runif(N,0,5)),ncol=2, byrow=T)
@@ -164,7 +169,8 @@ points(th.post,pch=16)
 contour(grid_k3,grid_k4,plot_grid,zlim=c(-2e05,0))
 
 
-th.post.mc <- mcmc(th.post, start = burnin+ 1, end = niter, thin = thin)
+th.post.mc <- mcmc(th.post[10:1100,], start = 100+1, end = niter, thin = thin)
 
 x11()
 plot(th.post.mc)
+
