@@ -21,8 +21,8 @@ if(parallel){
   
 }
 
-N = 10 #number of chains
-T_N = c(0,0.05,0.1,0.2,0,32,0.52,0.75,0.9,1) #temperature ladder
+N = 25 #number of chains
+T_N = seq(0,1,length=25) #temperature ladder
 
 log_prior <- function(th){
   #out = dmvnorm(th, mean = c(2,1), sigma = diag(1,nrow=2), log=T)
@@ -134,7 +134,7 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
 parallel = FALSE
 
 
-niter = 60000
+niter = 11000
 burnin = 0
 thin = 10 
 Sig = matrix(data = c(0.05, 0, 0, 0.05),nrow=2,ncol=2)
