@@ -227,7 +227,7 @@ for(k in 1:50){
 
 graphics.off()
 
-contour(grid.k3, grid.k4, post_grid, lwd = 1, labcex = 1.1, col = "blue", main = "Posterior density", 
+contour(grid.k3, grid.k4, post_grid, lwd = 1, labcex = 1.1,zlim=c(-2e05,0), col = "blue", main = "Posterior density", 
         xlab = "k3", ylab = "k4")
 
 for(i in seq(1,17,by=2)){
@@ -237,3 +237,68 @@ for(i in seq(1,17,by=2)){
 this.post <- finalMatrix[,15:16]
 this.post.mcmc <- mcmc(this.post,start=burnin+1,end=niter,thin=thin)
 plot(this.post.mcmc)
+
+
+
+log_prior <- function(th){
+  #out = dmvnorm(th, mean = c(2,1), sigma = diag(0.1,nrow=2), log=T)
+  out = log(dgamma(th[1],1,1)) + log(dgamma(th[2],1,1))
+  return(out)
+}
+
+# A function defining the likelihood
+
+log_likelihood <- function (th,y_obs,y0){
+  n = length(y_obs)
+  times = seq(0,30, by=0.5)
+  
+  y_mod = ode(y0,times,circ_oscillator,c(72,1,th[1],th[2],1),method = "ode23")[,3]
+  
+  out = 0
+  
+  #define the likelihood
+  for(i in (1:n))
+  {
+    out <- out + dnorm(y_obs[i],mean = y_mod[i], sd = 0.5,log=T)
+  }
+  return(out)
+}
+
+log_target <- function(th,y_obs,y0,alfa){
+  out = alfa*log_likelihood(th,y_obs,y0) + log_prior(th)
+  return(out)
+}
+
+
+
+grid_k3 = seq(1.3,5.1,by=0.1)
+grid_k4 = seq(0.1,4,by=0.1)
+
+alfa = 1
+
+plot_grid = matrix(nrow=length(grid_k3), ncol=length(grid_k4))
+for(i in (1:length(grid_k3))){
+  for(j in (1:length(grid_k4)))
+    plot_grid[i,j] = log_target(th=c(grid_k3[i],grid_k4[j]), y_obs = y_obs, y0=y0, alfa=alfa)
+}
+
+nbcol = 100
+color = rev(rainbow(nbcol, start = 0/6, end = 4/6))
+zcol  = cut(plot_grid, nbcol)
+p<-persp3d(grid_k3, grid_k4, plot_grid, theta = 50,phi=25, col=color[zcol],
+           ticktype="detailed", zlim = c(-2e05,1),xlab = "k3", ylab= "k4", zlab="",axes=TRUE)
+rgl.snapshot("posterior.png")
+
+
+image(grid_k3, grid_k4, plot_grid)
+contour(grid_k3, grid_k4, plot_grid, lwd = 1, labcex = 1.1,xlim=c(1.2,5.1),zlim=c(-2e05,0), col = "black", 
+        xlab = "k3", ylab = "k4",drawlabels=FALSE,add=TRUE)
+
+
+for(i in seq(1,17,by=2)){
+  points(finalMatrix[,i],finalMatrix[,(i+1)],cex=1.5)
+}
+for(i in seq(1,17,by=2)){
+  lines(finalMatrix[,i],finalMatrix[,(i+1)])
+}
+
