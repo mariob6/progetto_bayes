@@ -4,7 +4,8 @@
 setwd("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana")
 source("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana\\simple_oscillator.R")
 #source("/home/mario/Scrivania/progetto_bayes/simple_oscillator.R")
-
+#require(compiler)
+enableJIT(3)
 N = 40 #number of chains
 T_N = numeric(N) #temperature ladder
 
