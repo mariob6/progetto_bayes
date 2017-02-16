@@ -5,22 +5,6 @@ setwd("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana")
 source("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana\\simple_oscillator.R")
 #source("/home/mario/Scrivania/progetto_bayes/simple_oscillator.R")
 
-if(parallel){
-  library(foreach)
-  library(doParallel)
-  cores=detectCores()
-  if (cores == 1){
-    cat("cannot perform parallel on 1 cpu \n")
-    parallel = FALSE
-  }
-  cl <- makeCluster(cores[1]-1) #not to overload your computer
-  registerDoParallel(cl)
-  if (cores==2){
-    parallel = FALSE
-  }
-  
-}
-
 N = 40 #number of chains
 T_N = numeric(N) #temperature ladder
 
@@ -139,17 +123,17 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
 parallel = FALSE
 
 
-niter = 6000
+niter = 2000
 burnin = 0
 thin = 1 
-Sig = matrix(data = c(0.005, 0, 0, 0.005),nrow=2,ncol=2)
+Sig = matrix(data = c(0.1, 0, 0, 0.5),nrow=2,ncol=2)
 
 th0 = matrix( c(runif(N,0,5),runif(N,0,5)),ncol=2, byrow=T)
 th0[N,] = c(3.5,3.5)
 
-th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.95,log_target=log_target, parallel = parallel)
+th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.75,log_target=log_target, parallel = parallel)
 dim(th.post)
-write.table(th.post, file = "output_pop_MCMC1502.txt",row.names = F)
+write.table(th.post, file = "output_pop_MCMC_N_40.txt",row.names = F)
 #th.post<-read.table(file="output_pop_MCMC1402v2.txt",header=T)
 
 # Plotting the markov chain in the state space
