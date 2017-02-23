@@ -6,13 +6,14 @@ source("C:\\Users\\mario\\Desktop\\UNIVERSITA'\\Progetti\\bayesiana\\simple_osci
 #source("/home/mario/Scrivania/progetto_bayes/simple_oscillator.R")
 #require(compiler)
 enableJIT(3)
-N = 40 #number of chains
+N = 50 #number of chains
 T_N = numeric(N) #temperature ladder
 
-for(n in 1:N){
-  T_N[n]=n^5/N^5
+for(n in 1:(N-1)){
+  T_N[n]=n^5/(1.3*N)^5
 }
 
+T_N[N]=1
 
 log_prior <- function(th){
   #out = dmvnorm(th, mean = c(2,1), sigma = diag(1,nrow=2), log=T)
@@ -127,15 +128,20 @@ parallel = FALSE
 niter = 2000
 burnin = 0
 thin = 1 
-Sig = matrix(data = c(0.1, 0, 0, 0.5),nrow=2,ncol=2)
+Sig = matrix(data = c(0.05, 0.01, 0.01, 0.05),nrow=2,ncol=2)
 
 th0 = matrix( c(runif(N,0,5),runif(N,0,5)),ncol=2, byrow=T)
 th0[N,] = c(3.5,3.5)
 
 th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.75,log_target=log_target, parallel = parallel)
 dim(th.post)
+<<<<<<< HEAD
 write.table(th.post, file = "output_pop_MCMC_N_40.txt",row.names = F)
 #th.post<-read.table(file="output_pop_MCMC1502.txt",header=T)
+=======
+write.table(th.post, file = "output_pop_MCMC_1602v3.txt",row.names = F)
+#th.post<-read.table(file="output_pop_MCMC1402v2.txt",header=T)
+>>>>>>> 602a1a52586c7c512467be6ae6357d07b668d21a
 
 # Plotting the markov chain in the state space
 
@@ -154,6 +160,7 @@ points(th.post,pch=16)
 contour(grid_k3,grid_k4,plot_grid,zlim=c(-2e05,0))
 
 
+<<<<<<< HEAD
 #################
 
 thin2 = 10
@@ -164,6 +171,9 @@ i_thin = seq(burnin2,niter2,by=thin2)
 th.post_thin = th.post[i_thin,]
 
 th.post.mc <- mcmc(th.post_thin, start = burnin2+1, end = niter2, thin = thin2)
+=======
+th.post.mc <- mcmc(th.post[1000:2000 ,], start = 1000+1, end = niter, thin = thin)
+>>>>>>> 602a1a52586c7c512467be6ae6357d07b668d21a
 
 x11()
 plot(th.post.mc)
