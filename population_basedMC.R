@@ -135,7 +135,7 @@ th0[N,] = c(3.5,3.5)
 th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.75,log_target=log_target, parallel = parallel)
 dim(th.post)
 write.table(th.post, file = "output_pop_MCMC_N_40.txt",row.names = F)
-#th.post<-read.table(file="output_pop_MCMC1402v2.txt",header=T)
+#th.post<-read.table(file="output_pop_MCMC1502.txt",header=T)
 
 # Plotting the markov chain in the state space
 
@@ -154,7 +154,16 @@ points(th.post,pch=16)
 contour(grid_k3,grid_k4,plot_grid,zlim=c(-2e05,0))
 
 
-th.post.mc <- mcmc(th.post[10:1100,], start = 100+1, end = niter, thin = thin)
+#################
+
+thin2 = 10
+burnin2 = 100
+niter2 = 6000 
+i_thin = seq(burnin2,niter2,by=thin2)
+
+th.post_thin = th.post[i_thin,]
+
+th.post.mc <- mcmc(th.post_thin, start = burnin2+1, end = niter2, thin = thin2)
 
 x11()
 plot(th.post.mc)
