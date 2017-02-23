@@ -125,17 +125,17 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
 parallel = FALSE
 
 
-niter = 2000
+niter = 6000
 burnin = 0
 thin = 1 
-Sig = matrix(data = c(0.05, 0.01, 0.01, 0.05),nrow=2,ncol=2)
+Sig = matrix(data = c(3, 0.5, 0.5, 3),nrow=2,ncol=2)
 
 th0 = matrix( c(runif(N,0,5),runif(N,0,5)),ncol=2, byrow=T)
 th0[N,] = c(3.5,3.5)
 
 th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.75,log_target=log_target, parallel = parallel)
 dim(th.post)
-write.table(th.post, file = "output_pop_MCMC_1602v3.txt",row.names = F)
+write.table(th.post, file = "output_pop_MCMC_2302v1.txt",row.names = F)
 #th.post<-read.table(file="output_pop_MCMC1402v2.txt",header=T)
 
 # Plotting the markov chain in the state space
