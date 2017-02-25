@@ -10,9 +10,10 @@ N = 50 #number of chains
 T_N = numeric(N) #temperature ladder
 
 for(n in 1:(N-1)){
-  T_N[n]=n^5/(1.3*N)^5
+  T_N[n]=exp(2*n)/(exp(2*N))
 }
 
+T_N[1]=0
 T_N[N]=1
 
 log_prior <- function(th){
@@ -46,6 +47,8 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
 { 
   # th0 will be updated at each step, th will contail the output of interest (that is, when T_N = 1)
   th <- matrix(nrow= ceiling((niter-burnin)/thin), ncol=2)
+  th_prior <- matrix(nrow= ceiling((niter-burnin)/thin), ncol=2)
+  th_44 <- matrix(nrow= ceiling((niter-burnin)/thin), ncol=2)
   N = length(T_N)
   nacp = 0 # number of accepted moves
 
@@ -114,12 +117,15 @@ population_MCMC <- function(niter, burnin,thin ,th0, T_N ,Sig, y0, p_m,log_targe
     }
     if(i>burnin & (i-burnin)%%thin==0){
       th[(i-burnin)/thin,] = th0[N,]
+      th_prior[(i-burnin)/thin,] = th0[1,]
+      th_44[(i-burnin)/thin,] = th0[44,]
+      
     }
     
     if(i%%1==0) cat("*** Iteration number ", i,"/", niter, "\n")
   }
   cat("Acceptance rate =", nacp/niter, "\n")
-  return(th)
+  return(cbind(th,th_prior,th_44))
 }
 
 parallel = FALSE
@@ -133,10 +139,15 @@ Sig = matrix(data = c(3, 0.5, 0.5, 3),nrow=2,ncol=2)
 th0 = matrix( c(runif(N,0,5),runif(N,0,5)),ncol=2, byrow=T)
 th0[N,] = c(3.5,3.5)
 
-th.post <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.75,log_target=log_target, parallel = parallel)
+th.post.mix <- population_MCMC(niter = niter, burnin=burnin, thin = thin ,th0=th0, T_N=T_N ,Sig=Sig, y0=y0, p_m=0.75,log_target=log_target, parallel = parallel)
+th.post <- th.post.mix[,1:2]
+th.prior <- th.post.mix[,3:4]
+th.44 <- th.post.mix[,5:6]
 dim(th.post)
 
-write.table(th.post, file = "output_pop_MCMC_2302v2.txt",row.names = F)
+write.table(th.post, file = "output_pop_MCMC_2502.txt",row.names = F)
+write.table(th.prior, file = "output_pop_MCMC_2502prior.txt",row.names = F)
+write.table(th.44, file = "output_pop_MCMC_t0_2.txt",row.names = F)
 #th.post<-read.table(file="output_pop_MCMC1402v2.txt",header=T)
 
 
@@ -156,6 +167,8 @@ persp(grid_k3,grid_k4,plot_grid,zlim=c(-1e05,1))
 points(th.post,pch=16)
 contour(grid_k3,grid_k4,plot_grid,zlim=c(-2e05,0))
 
+this.post.mc <- mcmc(th.post, start = burnin+1, end = niter, thin = thin)
+plot(th.post.mc)
 #################
 
 thin2 = 10
@@ -166,7 +179,7 @@ i_thin = seq(burnin2,niter2,by=thin2)
 th.post_thin = th.post[i_thin,]
 
 
-th.post.mc <- mcmc(th.post[1000:2000 ,], start = 1000+1, end = niter, thin = thin)
+th.post.mc <- mcmc(th.post_thin, start = burnin2+1, end = niter, thin = thin2)
 
 
 x11()
